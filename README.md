@@ -1,4 +1,4 @@
-# Estudo Exploratório de Predição Conformal
+# Estudo Exploratório de Previsão Conforme
 
 ## Sumário
 
@@ -12,7 +12,7 @@
 
 ## Introdução
 
-Este projeto segue apenas meu jupyter notebook relacionado a Predição Conformal. Nele, correlaciono algumas técnicas vistas em alguns artigos cientificos aos quais utilizam a técnica que de calibração de modelo a partir da amostragem "out-of-bag" de um modelo "aprendiz", assim tirando a necessidade de criar uma amostra de dados somente para calibração.
+Este projeto segue apenas meu jupyter notebook relacionado a Previsão Conforme. Nele, correlaciono algumas técnicas vistas em alguns artigos cientificos aos quais utilizam a técnica que de calibração de modelo a partir da amostragem "out-of-bag" de um modelo "aprendiz", assim tirando a necessidade de criar uma amostra de dados somente para calibração.
 
 ## Calibração OOB
 
@@ -30,7 +30,7 @@ Ao contrário da regressão isotônica, o Venn-Abers não sofre de overfitting e
 
 ## Cobertura Marginal para Classificação Conformal
 
-A Cobertura Marginal representa uma das abordagens de garantia de cobertura na Predição Conformal. Neste método, uma proporção de 1−α das regiões de previsão é projetada para incluir o rótulo correto para novas instâncias de dados, com base em um determinado nível de confiança. No contexto deste estudo, foi adotado um nível de confiança de 95%.
+A Cobertura Marginal representa uma das abordagens de garantia de cobertura na Previsão Conforme. Neste método, uma proporção de 1−α das regiões de previsão é projetada para incluir o rótulo correto para novas instâncias de dados, com base em um determinado nível de confiança. No contexto deste estudo, foi adotado um nível de confiança de 95%.
 
 ## Perda de Hinge como Métrica de Não Conformidade
 
