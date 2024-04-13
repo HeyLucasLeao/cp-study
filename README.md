@@ -37,6 +37,7 @@ A Cobertura Marginal representa uma das abordagens de garantia de cobertura na P
 Para calcular o escore de não conformidade, eu utilizo a função hinge, também conhecida como inversão probabilística, onde o cálculo é realizado como 1 - f(x), sendo f(x) a representação da previsão probabilistica da camada de Venn-Abers.
 
 ## Diagrama de Treinamento
+![chrome_4nlHQR36OP](https://github.com/HeyLucasLeao/cp-study/assets/26440910/704b53ae-c2ce-4b66-9c08-afaae8bd8448)
 
 ## Notion de Estudos
 
