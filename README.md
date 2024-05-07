@@ -32,9 +32,13 @@ Ao contrário da regressão isotônica, o Venn-Abers não sofre de overfitting e
 
 A Cobertura Marginal representa uma das abordagens de garantia de cobertura na Previsão Conforme. Neste método, uma proporção de 1−α das regiões de previsão é projetada para incluir o rótulo correto para novas instâncias de dados, com base em um determinado nível de confiança. No contexto deste estudo, foi adotado um nível de confiança de 95%.
 
-## Perda de Hinge como Métrica de Não Conformidade
+## Margem como Métrica de Não Conformidade
 
-Para calcular o escore de não conformidade, eu utilizo a função hinge, também conhecida como inversão probabilística, onde o cálculo é realizado como 1 - f(x), sendo f(x) a representação da previsão probabilistica da camada de Venn-Abers.
+Inicialmente, a métrica de não conformidade selecionada foi Hinge, também conhecida como inversão probabilística, onde o cálculo é realizado como 1 - f(x), sendo f(x) a representação da previsão probabilistica da camada de Venn-Abers. Entretanto, após revisão de artigos e livros, alterei para utilização de margem como métrica de não conformidade,
+por gerar maiores singletons. A margem indica o nível de risco da previsão do modelo. Valores positivos indicam a confiança para uma classe incorreta,
+enquanto perto de zero ou negativo, indica uma forte confiança para a classe verdadeira. 
+
+Para a problemática, modifiquei para modelos binários, a fim de otimizar tempo. Há um exemplo do código utilizado na biblioteca [crepes](https://github.com/henrikbostrom/crepes/blob/main/src/crepes/base.py) como referência.
 
 ## Diagrama de Treinamento
 ![chrome_4nlHQR36OP](https://github.com/HeyLucasLeao/cp-study/assets/26440910/704b53ae-c2ce-4b66-9c08-afaae8bd8448)
