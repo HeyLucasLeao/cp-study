@@ -28,9 +28,11 @@ O Venn-Abers é um método de calibração probabilística que pode ser aplicado
 
 Ao contrário da regressão isotônica, o Venn-Abers não sofre de overfitting em conjuntos de dados de tamanho não grande, ele se destaca por é uma forma mais avançada e regularizada de regressão isotônica. Em sua essência, em vez de empregar a regressão uma vez, é aplicado duas vezes, postulando que cada objeto de teste poderia pertencer à rótulo 0 ou 1. Este objeto é então integrado ao conjunto de calibração duas vezes, sob ambas as etiquetas, levando a duas probabilidades resultantes: p0 e p1, transformando uma incerteza heurística a uma probabilidade empírica. Isso significa que o Venn-ABERS é capaz de calcular duas probabilidades distintas para cada objeto de teste, considerando a possibilidade de pertencer a ambas as classes.
 
-## Cobertura Marginal para Classificação Conformal
+## Previsão Conforme Mondrian por Classe Condicional
 
-A Cobertura Marginal representa uma das abordagens de garantia de cobertura na Previsão Conforme. Neste método, uma proporção de 1−α das regiões de previsão é projetada para incluir o rótulo correto para novas instâncias de dados, com base em um determinado nível de confiança. No contexto deste estudo, foi adotado um nível de confiança de 95%.
+Anteriormente foi feito utilizando Cobertura Marginal. Neste método, uma proporção de 1−α das regiões de previsão é projetada para incluir o rótulo correto para novas instâncias de dados, com base em um determinado nível de confiança.
+
+A diferença para esta metodologia é devido as regiões de previsão serem calculadas separadamente por classe. Isto garante que o desbalanceamento da distribuição de dados não interfira com as classes com menores representatividades.
 
 ## Margem como Métrica de Não Conformidade
 
