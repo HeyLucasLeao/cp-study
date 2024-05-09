@@ -34,6 +34,8 @@ Anteriormente foi feito utilizando Cobertura Marginal. Neste método, uma propor
 
 A diferença para esta metodologia é devido as regiões de previsão serem calculadas separadamente por classe. Isto garante que o desbalanceamento da distribuição de dados não interfira com as classes com menores representatividades.
 
+![chrome_v2mwQMSiOd](https://github.com/HeyLucasLeao/cp-study/assets/26440910/0f3c6877-f7b2-4bbe-8cf7-902ac221906d)
+
 ## Margem como Métrica de Não Conformidade
 
 Inicialmente, a métrica de não conformidade selecionada foi Hinge, também conhecida como inversão probabilística, onde o cálculo é realizado como 1 - f(x), sendo f(x) a representação da previsão probabilistica da camada de Venn-Abers. Entretanto, após revisão de artigos e livros, alterei para utilização de margem como métrica de não conformidade,
@@ -43,7 +45,9 @@ enquanto perto de zero ou negativo, indica uma forte confiança para a classe ve
 Para a problemática, modifiquei para modelos binários, a fim de otimizar tempo. Há um exemplo do código utilizado na biblioteca [crepes](https://github.com/henrikbostrom/crepes/blob/main/src/crepes/base.py) como referência.
 
 ## Diagrama de Treinamento
-![chrome_4nlHQR36OP](https://github.com/HeyLucasLeao/cp-study/assets/26440910/704b53ae-c2ce-4b66-9c08-afaae8bd8448)
+![Dados de treinamento](https://github.com/HeyLucasLeao/cp-study/assets/26440910/79dc819d-c37f-49ec-98fc-82e26cf82911)
+
+
 
 ## Notion de Estudos
 
