@@ -5,8 +5,8 @@
 1. Introdução
 2. Calibração OOB
 3. Venn-Abers
-4. Cobertura Marginal para Classificação Conformal
-5. Perda de Hinge como Métrica de Não Conformidade
+4. Previsão Conforme Mondrian por Classe Condicional
+5. Margem como Métrica de Não Conformidade
 6. Diagrama de Modelo
 7. Notion de Estudos
 
