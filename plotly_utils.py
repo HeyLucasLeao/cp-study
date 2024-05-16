@@ -9,8 +9,30 @@ from sklearn.metrics import confusion_matrix as sklearn_confusion_matrix
 
 
 def efficiency_curve(clf, X: np.ndarray, fig_type=None):
+    """
+    Generates an efficiency and validity curve for a classifier.
+
+    Args:
+        clf (object): The classifier model.
+        X (np.ndarray): Input data.
+        fig_type (str, optional): Type of figure to display (e.g., 'png', 'svg'). Defaults to None.
+
+    Returns:
+        A efficiency curve plot.
+    """
 
     def get_error_metrics(clf, X: np.ndarray) -> List:
+        """
+        Calculates error metrics for different error rates.
+
+        Args:
+            clf (object): The classifier model.
+            X (np.ndarray): Input data.
+
+        Returns:
+            List: List of dictionaries containing efficiency and validity scores for each error rate.
+        """
+
         error_rate = {
             k: {} for k in [0.45, 0.40, 0.35, 0.30, 0.25, 0.20, 0.15, 0.10, 0.05]
         }
@@ -47,6 +69,19 @@ def efficiency_curve(clf, X: np.ndarray, fig_type=None):
 
 
 def reliability_curve(clf, X, y, n_bins=15, fig_type=None) -> go.Figure:
+    """
+    Generates a reliability curve for a classifier.
+
+    Args:
+        clf (object): The classifier model.
+        X (np.ndarray): Input data.
+        y (np.ndarray): True labels.
+        n_bins (int, optional): Number of bins for the reliability curve. Defaults to 15.
+        fig_type (str, optional): Type of figure to display (e.g., 'png', 'svg'). Defaults to None.
+
+    Returns:
+        go.Figure: Reliability curve plot.
+    """
 
     y_prob = clf.predict_proba(X)[:, 1]
 
@@ -87,6 +122,18 @@ def reliability_curve(clf, X, y, n_bins=15, fig_type=None) -> go.Figure:
 
 
 def histogram(clf, X, nbins=15, fig_type=None):
+    """
+    Generates a histogram of predicted scores for a classifier.
+
+    Args:
+        clf (object): The classifier model.
+        X (np.ndarray): Input data.
+        nbins (int, optional): Number of bins for the histogram. Defaults to 15.
+        fig_type (str, optional): Type of figure to display (e.g., 'png', 'svg'). Defaults to None.
+
+    Returns:
+        A histogram plot.
+    """
     y_prob = clf.predict_proba(X)[:, 1]
     fig = px.histogram(y_prob, nbins=nbins)
     fig.update_layout(
@@ -102,21 +149,42 @@ def histogram(clf, X, nbins=15, fig_type=None):
     return fig.show(fig_type)
 
 
-def confusion_matrix(clf, X, y, alpha=None, fig_type=None):
+def confusion_matrix(clf, X, y, alpha=None, fig_type=None, percentage_by_class=True):
+    """
+    Generates an annotated heatmap of the confusion matrix for a classifier.
+
+    Args:
+        clf: Classifier object (e.g., sklearn classifier).
+        X: Input features.
+        y: True labels.
+        alpha: Optional parameter for classifier prediction.
+        fig_type: Optional figure type (e.g., 'png', 'svg').
+        percentage_by_class: If True, displays percentages by class; otherwise, overall percentages.
+
+    Returns:
+        Annotated heatmap of the confusion matrix.
+    """
+
     y_pred = clf.predict(X, alpha)
     cm = sklearn_confusion_matrix(y, y_pred)
     labels = np.array([["TN", "FN"], ["FP", "TP"]])
-    percentage = cm / len(y)
-    annotation_text = np.array(
-        [
-            [f"{labels[i][j]}: {valor * 100:.2f}" for j, valor in enumerate(linha)]
-            for i, linha in enumerate(percentage)
-        ]
-    )
+
+    if percentage_by_class:
+        total = cm.sum(axis=0)
+        percentage = cm / total * 100
+    else:
+        percentage = cm / np.sum(cm) * 100
+
+    annotation_text = np.empty_like(percentage, dtype="U10")
+
+    for i in range(percentage.shape[0]):
+        for j in range(percentage.shape[1]):
+            annotation_text[i, j] = f"{labels[i, j]} {percentage[i, j]:.2f}"
+
     fig = ff.create_annotated_heatmap(
         cm,
-        x=["False", "True"],
-        y=["False", "True"],
+        x=["Negative", "Positive"],
+        y=["Negative", "Positive"],
         colorscale="Blues",
         hoverinfo="z",
         annotation_text=annotation_text,
