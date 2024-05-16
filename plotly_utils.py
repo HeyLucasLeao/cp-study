@@ -4,6 +4,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from sklearn.calibration import calibration_curve
+import plotly.figure_factory as ff
+from sklearn.metrics import confusion_matrix as sklearn_confusion_matrix
 
 
 def efficiency_curve(clf, X: np.ndarray, fig_type=None):
@@ -97,4 +99,28 @@ def histogram(clf, X, nbins=15, fig_type=None):
     fig.update_layout(hovermode="x")
     fig.update_traces(hovertemplate="%{y}")
     fig.update_layout(showlegend=False)
+    return fig.show(fig_type)
+
+
+def confusion_matrix(clf, X, y, alpha=None, fig_type=None):
+    y_pred = clf.predict(X, alpha)
+    cm = sklearn_confusion_matrix(y, y_pred)
+    labels = np.array([["FN", "TN"], ["FP", "TP"]])
+    percentage = cm / len(y)
+    annotation_text = np.array(
+        [
+            [f"{labels[i][j]}: {valor * 100:.2f}" for j, valor in enumerate(linha)]
+            for i, linha in enumerate(percentage)
+        ]
+    )
+    fig = ff.create_annotated_heatmap(
+        cm,
+        x=["False", "True"],
+        y=["False", "True"],
+        colorscale="Blues",
+        hoverinfo="z",
+        annotation_text=annotation_text,
+    )
+
+    fig.update_layout(width=400, height=400, title="Confusion Matrix")
     return fig.show(fig_type)
