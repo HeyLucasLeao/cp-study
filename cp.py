@@ -10,6 +10,10 @@ from sklearn.utils.validation import check_is_fitted
 from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 import pandas as pd
+import warnings
+
+# Suprimir o aviso específico
+warnings.filterwarnings("ignore", category=RuntimeWarning, module="venn_abers")
 
 
 class WrapperOOBBinaryConformalClassifier:
@@ -88,7 +92,7 @@ class WrapperOOBBinaryConformalClassifier:
 
     def predict_proba(self, X):
         """
-        This function predicts the class probabilities for the instances in X.
+        Predicts the class probabilities for the instances in X.
 
         Parameters:
         X: array-like of shape (n_samples, n_features)
@@ -105,7 +109,7 @@ class WrapperOOBBinaryConformalClassifier:
 
     def predict(self, X, alpha=None):
         """
-        This function predicts the classes for the instances in X.
+        Predicts the classes for the instances in X.
 
         Parameters:
         X: array-like of shape (n_samples, n_features)
@@ -125,7 +129,7 @@ class WrapperOOBBinaryConformalClassifier:
 
     def predict_set(self, X, alpha=None):
         """
-        This function predicts the possible set of classes for the instances in X based on the predefined significance level.
+        Predicts the possible set of classes for the instances in X based on the predefined significance level.
 
         Parameters:
         X: array-like of shape (n_samples, n_features)
@@ -156,7 +160,7 @@ class WrapperOOBBinaryConformalClassifier:
 
     def _expected_calibration_error(self, y, y_prob, M=5):
         """
-        This function calculates the expected calibration error (ECE) of the classifier.
+        Generate the expected calibration error (ECE) of the classifier.
 
         Parameters:
         y: array-like of shape (n_samples,)
@@ -212,7 +216,7 @@ class WrapperOOBBinaryConformalClassifier:
 
     def _empirical_coverage(self, X, alpha=None, iterations=100):
         """
-        This function calculates the empirical coverage of the classifier.
+        Generate the empirical coverage of the classifier.
 
         Parameters:
         X: array-like of shape (n_samples, n_features)
@@ -251,7 +255,7 @@ class WrapperOOBBinaryConformalClassifier:
 
     def calibrate_alpha(self, X):
         """
-        This function calibrates the alpha level of the classifier based on the calibration set. The alpha level is a threshold that determines the size of the prediction set.
+        Calibrates the alpha level of the classifier based on the calibration set. The alpha level is a threshold that determines the size of the prediction set.
         A smaller alpha results in a larger prediction set and vice versa.
 
         A lower validity (AvgC) value signifies that the model is better at producing more specific and informative
@@ -272,7 +276,7 @@ class WrapperOOBBinaryConformalClassifier:
             Returns self.
 
         The function works as follows:
-        - It first initializes a dictionary with potential alpha values of 0.15, 0.10, and 0.05.
+        - It first initializes a dictionary with potential alpha values of 0.10, and 0.05.
         - For each potential alpha, it computes the prediction set for the calibration data.
         - It then calculates the proportion of instances in the calibration set where the prediction set contains exactly one class.
         - The alpha that results in the highest proportion of single-class prediction sets is selected as the calibrated alpha for the classifier.
@@ -292,7 +296,7 @@ class WrapperOOBBinaryConformalClassifier:
 
     def evaluate(self, X, y, alpha=None):
         """
-        This function evaluates the performance of the conformal classifier on the given test data and labels.
+        Evaluates the performance of the conformal classifier on the given test data and labels.
 
         Parameters:
         X: array-like of shape (n_samples, n_features)
