@@ -105,7 +105,7 @@ def histogram(clf, X, nbins=15, fig_type=None):
 def confusion_matrix(clf, X, y, alpha=None, fig_type=None):
     y_pred = clf.predict(X, alpha)
     cm = sklearn_confusion_matrix(y, y_pred)
-    labels = np.array([["FN", "TN"], ["FP", "TP"]])
+    labels = np.array([["TN", "FN"], ["FP", "TP"]])
     percentage = cm / len(y)
     annotation_text = np.array(
         [
