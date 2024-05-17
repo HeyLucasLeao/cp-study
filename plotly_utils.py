@@ -166,8 +166,9 @@ def confusion_matrix(clf, X, y, alpha=None, fig_type=None, percentage_by_class=T
     """
 
     y_pred = clf.predict(X, alpha)
-    cm = sklearn_confusion_matrix(y, y_pred)
-    labels = np.array([["TN", "FN"], ["FP", "TP"]])
+    tn, fp, fn, tp = sklearn_confusion_matrix(y, y_pred).ravel()
+    labels = np.array([["FN", "TN"], ["TP", "FP"]])
+    cm = np.array([[fn, tn], [tp, fp]])
 
     if percentage_by_class:
         total = cm.sum(axis=0)
@@ -183,7 +184,7 @@ def confusion_matrix(clf, X, y, alpha=None, fig_type=None, percentage_by_class=T
 
     fig = ff.create_annotated_heatmap(
         cm,
-        x=["Negative", "Positive"],
+        x=["Positive", "Negative"],
         y=["Negative", "Positive"],
         colorscale="Blues",
         hoverinfo="z",
