@@ -295,19 +295,33 @@ class WrapperOOBBinaryConformalClassifier:
             for k in [0.10, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.02, 0.01]
         }
 
-        n = len(X)
-        pos_weight = n / (len(y[y == 1]) * 2)
-        neg_weight = n / (len(y[y == 0]) * 2)
-
         for alpha in alphas:
             y_pred = self.predict(X, alpha)
-            fn = np.sum(np.logical_and(y == 1, y_pred == 0))
-            fp = np.sum(np.logical_and(y == 0, y_pred == 1))
-            alphas[alpha] = (fp * pos_weight) + (fn * neg_weight)  # Cost
+            alphas[alpha] = self.efficiency_rate(y, y_pred)
 
-        self.alpha = min(alphas, key=alphas.get)
+        self.alpha = max(alphas, key=alphas.get)
 
-        return self.alpha
+        return self
+
+    def efficiency_rate(self, y_true, y_pred):
+        """
+        Generate the efficiency rate based on true positive (TP) and true negative (FP) values.
+
+        Parameters:
+            y_true: A NumPy array or list containing true labels (1 for positive, 0 for negative).
+            y_pred: A NumPy array or list containing predicted labels (1 for positive, 0 for negative).
+        Formula:
+            Efficieny Rate = ((TP / Total positive samples) + (TN / Total negative samples)) / 2
+        Explanation:
+            True Positive (TP): The number of correctly predicted positive samples.
+            Total positive samples: The total number of positive samples in the dataset.
+        Returns:
+            The efficiency rate
+        """
+        tp = np.sum(np.logical_and(y_true == 1, y_pred == 1)) / sum(y_true == 1)
+        tn = np.sum(np.logical_and(y_true == 0, y_pred == 0)) / sum(y_true == 0)
+
+        return (tp + tn) / 2
 
     def evaluate(self, X, y, alpha=None):
         """
