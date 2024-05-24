@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning, module="venn_abers")
 
 class WrapperOOBBinaryConformalClassifier:
     """
-    A modrian class conditional conformal classifier based on Out-of-Bag (OOB) methodology, utilizing a random forest classifier as the underlying learner.
+    A conformal classifier based on Out-of-Bag (OOB) methodology, utilizing a random forest classifier as the underlying learner.
     This class is inspired by the WrapperClassifier classes from the Crepes library.
     """
 
@@ -37,7 +37,7 @@ class WrapperOOBBinaryConformalClassifier:
             The calibration layer utilized in the classifier.
         feature_importances_: array-like of shape (n_features,)
             The feature importances derived from the learner.
-        alphas: array-like of shape (n_samples,), default=None
+        margin: array-like of shape (n_samples,), default=None
             Nonconformity measure based at the difference between the predicted probability
             of most likely incorrent class label and the predicted probability of the true label.
             Close to zero or negative margin indicates confidence in the true class label, while a large positive margin signals
@@ -49,17 +49,13 @@ class WrapperOOBBinaryConformalClassifier:
         # Ensure the learner is fitted
         check_is_fitted(learner)
 
-        if learner.n_classes_ > 2:
-            raise ("Learner has more than 2 labels.")
-
         # Initialize attributes
         self.learner = learner
         self.calibration_layer = VennAbers()
         self.feature_importances_ = self.learner.feature_importances_
-        self.alphas = None
+        self.margin = None
         self.alpha = 0.05
         self.n = None
-        self.classes = None
 
     def fit(self, y):
         """
@@ -88,11 +84,9 @@ class WrapperOOBBinaryConformalClassifier:
         # We only need the probability for the true class
         self.n = len(self.learner.oob_decision_function_)
 
-        margin = (
+        self.margin = (
             y_prob[np.arange(len(y_prob)), 1 - y] - y_prob[np.arange(len(y_prob)), y]
         )
-        self.classes = self.learner.classes_
-        self.alphas = [margin[y == c] for c in self.classes]
 
         return self
 
@@ -129,7 +123,7 @@ class WrapperOOBBinaryConformalClassifier:
         if alpha is None:
             alpha = self.alpha
 
-        y_pred = self.predict_set(X)
+        y_pred = self.predict_set(X, alpha)
 
         return np.where(np.all(y_pred == [0, 1], axis=1), 1, 0)
 
@@ -158,19 +152,15 @@ class WrapperOOBBinaryConformalClassifier:
         nc_score = np.column_stack(
             (class_1_prob - class_0_prob, class_0_prob - class_1_prob)
         )
-        prediction_set = np.zeros((len(X), len(self.classes)))
 
         q_level = np.ceil((self.n + 1) * (1 - alpha)) / self.n
+        qhat = np.quantile(self.margin, q_level, method="higher")
 
-        for c in self.classes:
-            qhat = np.quantile(self.alphas[c], q_level, method="higher")
-            prediction_set[:, c] = (nc_score <= qhat)[:, c]
-
-        return prediction_set.astype(int)
+        return (nc_score <= qhat).astype(int)
 
     def _expected_calibration_error(self, y, y_prob, M=5):
         """
-        Calculates the expected calibration error (ECE) of the classifier.
+        Generate the expected calibration error (ECE) of the classifier.
 
         Parameters:
         y: array-like of shape (n_samples,)
@@ -252,61 +242,54 @@ class WrapperOOBBinaryConformalClassifier:
             (class_1_prob - class_0_prob, class_0_prob - class_1_prob)
         )
         n = int(len(scores) * 0.20)
-        classes = [0, 1]
 
         for i in range(iterations):
             np.random.shuffle(scores)  # shuffle
             calib_scores, val_scores = (scores[:n], scores[n:])  # split
             q_level = np.ceil((n + 1) * (1 - alpha)) / n
-            prediction_set = np.zeros((len(val_scores), len(self.classes)))
-
-            for c in classes:
-                qhat = np.quantile(calib_scores[:, [c]], q_level, method="higher")
-                prediction_set[:, c] = (val_scores <= qhat)[:, c]
-
-            coverages[i] = prediction_set.astype(float).mean()  # see caption
+            qhat = np.quantile(calib_scores, q_level, method="higher")  # calibrate
+            coverages[i] = (val_scores <= qhat).astype(float).mean()  # see caption
             average_coverage = coverages.mean()  # should be close to 1-alpha
 
         return average_coverage
 
-    def calibrate_alpha(self, X):
+    def calibrate_alpha(self, X, y):
         """
-        Calibrates the alpha level of the classifier based on the calibration set. The alpha level is a threshold that determines the size of the prediction set.
-        A smaller alpha results in a larger prediction set and vice versa.
-
-        A lower validity (AvgC) value signifies that the model is better at producing more specific and informative
-        predictions.
-
-        A higher efficiency (OneC) value indicates that the conformal prediction model produces specific and informative
-        predictions more efficiently.
-
-        Researchers have determined that the most effective approach is to use a margin-based nonconformity
-        function to achieve a high rate of singleton predictions (OneC).
+        Calibrates the alpha value to minimize the error rate
+        using Cost Sensitive Learning methodology, balanced by label weights.
 
         Parameters:
         X: array-like of shape (n_samples, n_features)
-            The calibration input samples. These are typically a subset of the training data.
+            The test input samples.
+        y: array-like of shape (n_samples,)
+            The true labels for X.
+
+        For each alpha value (0.10, 0.09, …, 0.01), we do the following:
+        - Calculate predictions y_pred using the self.predict(X, alpha) function.
+        - Determine positive weights (pos_weight) and negative weights (neg_weight) based on the number of positive and negative samples.
+        - Compute false negatives (fn) and false positives (fp).
+        - Calculate the cost associated with this alpha as (fp * pos_weight) + (fn * neg_weight) and store it in the alphas dictionary.
 
         Returns:
-        self: object
-            Returns self.
-
-        The function works as follows:
-        - It first initializes a dictionary with potential alpha values of 0.15, 0.10, and 0.05.
-        - For each potential alpha, it computes the prediction set for the calibration data.
-        - It then calculates the proportion of instances in the calibration set where the prediction set contains exactly one class.
-        - The alpha that results in the highest proportion of single-class prediction sets is selected as the calibrated alpha for the classifier.
+            The updated instance (self.alpha) with the calibrated alpha value.
         """
 
-        alphas = {k: None for k in [0.10, 0.05]}
+        alphas = {
+            k: None
+            for k in [0.10, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.02, 0.01]
+        }
+
+        n = len(X)
 
         for alpha in alphas:
-            predict_set = self.predict_set(X, alpha)
-            alphas[alpha] = np.sum([np.sum(p) == 1 for p in predict_set]) / len(
-                predict_set
-            )  # OneC
+            y_pred = self.predict(X, alpha)
+            pos_weight = n / (len(y[y == 1]) * 2)
+            neg_weight = n / (len(y[y == 0]) * 2)
+            fn = np.sum(np.logical_and(y == 1, y_pred == 0))
+            fp = np.sum(np.logical_and(y == 0, y_pred == 1))
+            alphas[alpha] = (fp * pos_weight) + (fn * neg_weight)  # Cost
 
-        self.alpha = max(alphas, key=alphas.get)
+        self.alpha = min(alphas, key=alphas.get)
 
         return self
 
@@ -353,11 +336,12 @@ class WrapperOOBBinaryConformalClassifier:
             1 - np.sum(predict_set[np.arange(len(y)), y]) / len(y), n_digits
         )
         results["log_loss"] = round(log_loss(y, y_prob[:, 1]), n_digits)
-        results["brier_loss"] = round(brier_score_loss(y, y_prob[:, 1]), n_digits)
+        results["brier"] = round(brier_score_loss(y, y_prob[:, 1]), n_digits)
         results["ece"] = round(self._expected_calibration_error(y, y_prob), n_digits)
         results["empirical_coverage"] = round(
             self._empirical_coverage(X, alpha), n_digits
         )
+
         results["auc"] = round(roc_auc_score(y, self.predict_proba(X)[:, 1]), n_digits)
         results["precision"] = round(precision_score(y, self.predict(X)), n_digits)
         results["recall"] = round(recall_score(y, self.predict(X)), n_digits)
