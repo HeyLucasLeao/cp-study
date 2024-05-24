@@ -296,18 +296,18 @@ class WrapperOOBBinaryConformalClassifier:
         }
 
         n = len(X)
+        pos_weight = n / (len(y[y == 1]) * 2)
+        neg_weight = n / (len(y[y == 0]) * 2)
 
         for alpha in alphas:
             y_pred = self.predict(X, alpha)
-            pos_weight = n / (len(y[y == 1]) * 2)
-            neg_weight = n / (len(y[y == 0]) * 2)
             fn = np.sum(np.logical_and(y == 1, y_pred == 0))
             fp = np.sum(np.logical_and(y == 0, y_pred == 1))
             alphas[alpha] = (fp * pos_weight) + (fn * neg_weight)  # Cost
 
         self.alpha = min(alphas, key=alphas.get)
 
-        return self
+        return self.alpha
 
     def evaluate(self, X, y, alpha=None):
         """
