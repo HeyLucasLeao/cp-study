@@ -4,6 +4,7 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     roc_auc_score,
+    balanced_accuracy_score,
 )
 from venn_abers import VennAbers
 from sklearn.utils.validation import check_is_fitted
@@ -272,7 +273,7 @@ class WrapperOOBBinaryConformalClassifier:
     def calibrate_alpha(self, X, y):
         """
         Calibrates the alpha value to minimize the error rate
-        using Cost Sensitive Learning methodology, balanced by label weights.
+        using Cost Sensitive Learning methodology, using balanced_accuracy_score.
 
         Parameters:
         X: array-like of shape (n_samples, n_features)
@@ -282,46 +283,25 @@ class WrapperOOBBinaryConformalClassifier:
 
         For each alpha value (0.10, 0.09, …, 0.01), we do the following:
         - Calculate predictions y_pred using the self.predict(X, alpha) function.
-        - Determine positive weights (pos_weight) and negative weights (neg_weight) based on the number of positive and negative samples.
-        - Compute false negatives (fn) and false positives (fp).
-        - Calculate the cost associated with this alpha as (fp * pos_weight) + (fn * neg_weight) and store it in the alphas dictionary.
 
         Returns:
             The updated instance (self.alpha) with the calibrated alpha value.
         """
-
         alphas = {
-            k: None
-            for k in [0.10, 0.09, 0.08, 0.07, 0.06, 0.05, 0.04, 0.03, 0.02, 0.01]
+            round(
+                k,
+                2,
+            ): None
+            for k in np.linspace(0.01, 0.10, 10)
         }
 
         for alpha in alphas:
             y_pred = self.predict(X, alpha)
-            alphas[alpha] = self.efficiency_rate(y, y_pred)
+            alphas[alpha] = balanced_accuracy_score(y, y_pred)
 
         self.alpha = max(alphas, key=alphas.get)
 
         return self
-
-    def efficiency_rate(self, y_true, y_pred):
-        """
-        Generate the efficiency rate based on true positive (TP) and true negative (FP) values.
-
-        Parameters:
-            y_true: A NumPy array or list containing true labels (1 for positive, 0 for negative).
-            y_pred: A NumPy array or list containing predicted labels (1 for positive, 0 for negative).
-        Formula:
-            Efficieny Rate = ((TP / Total positive samples) + (TN / Total negative samples)) / 2
-        Explanation:
-            True Positive (TP): The number of correctly predicted positive samples.
-            Total positive samples: The total number of positive samples in the dataset.
-        Returns:
-            The efficiency rate
-        """
-        tp = np.sum(np.logical_and(y_true == 1, y_pred == 1)) / sum(y_true == 1)
-        tn = np.sum(np.logical_and(y_true == 0, y_pred == 0)) / sum(y_true == 0)
-
-        return (tp + tn) / 2
 
     def evaluate(self, X, y, alpha=None):
         """
