@@ -28,7 +28,7 @@ O Venn-Abers é um método de calibração probabilística que pode ser aplicado
 
 Ao contrário da regressão isotônica, o Venn-Abers não sofre de overfitting em conjuntos de dados de tamanho não grande, ele se destaca por é uma forma mais avançada e regularizada de regressão isotônica. Em sua essência, em vez de empregar a regressão uma vez, é aplicado duas vezes, postulando que cada objeto de teste poderia pertencer à rótulo 0 ou 1. Este objeto é então integrado ao conjunto de calibração duas vezes, sob ambas as etiquetas, levando a duas probabilidades resultantes: p0 e p1, transformando uma incerteza heurística a uma probabilidade empírica. Isso significa que o Venn-ABERS é capaz de calcular duas probabilidades distintas para cada objeto de teste, considerando a possibilidade de pertencer a ambas as classes.
 
-## Previsão Conforme Mondrian por Classe Condicional
+## Previsão Conforme Mondriana por Classe Condicional
 
 Anteriormente foi feito utilizando Cobertura Marginal. Neste método, uma proporção de 1−α das regiões de previsão é projetada para incluir o rótulo correto para novas instâncias de dados, com base em um determinado nível de confiança.
 
@@ -36,11 +36,9 @@ A diferença para esta metodologia é devido as regiões de previsão serem calc
 
 ![chrome_v2mwQMSiOd](https://github.com/HeyLucasLeao/cp-study/assets/26440910/0f3c6877-f7b2-4bbe-8cf7-902ac221906d)
 
-## Margem como Métrica de Não Conformidade
+## Score de Não Conformidade
 
-Inicialmente, a métrica de não conformidade selecionada foi Hinge, também conhecida como inversão probabilística, onde o cálculo é realizado como 1 - f(x), sendo f(x) a representação da previsão probabilistica da camada de Venn-Abers. Entretanto, após revisão de artigos e livros, alterei para utilização de margem como métrica de não conformidade,
-por gerar maiores singletons. A margem indica o nível de risco da previsão do modelo. Valores positivos indicam a confiança para uma classe incorreta,
-enquanto perto de zero ou negativo, indica uma forte confiança para a classe verdadeira. 
+Para fins de aprendizado, criei dois templates de modelo, um utilizando score de probabilidade inversa, ou Hinge Loss, onde é calculado 1 - f(x) sendo f(x) a representação da previsão probabilistica da camada de Venn-Abers, podendo ir de zero a um o seu valor, sendo zero relaciona ao modelo estar correto, e um indicando que o modelo está completamente errado, enquanto margin refere-se à diferença entre a probabilidade da predição mais incorreta e a probabilidade correta. Valores menores ou iguais a zero indicam que o modelo tem certa confiança em relação à classe verdadeira, enquanto valores positivos representam uma incerteza em sua predição.
 
 Para a problemática, modifiquei para modelos binários, a fim de otimizar tempo. Há um exemplo do código utilizado na biblioteca [crepes](https://github.com/henrikbostrom/crepes/blob/main/src/crepes/base.py) como referência.
 
