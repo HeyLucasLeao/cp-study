@@ -68,7 +68,9 @@ def efficiency_curve(clf, X: np.ndarray, fig_type=None):
     return fig.show(fig_type)
 
 
-def reliability_curve(clf, X, y, n_bins=15, fig_type=None) -> go.Figure:
+def reliability_curve(
+    clf, X, y, n_bins=15, fig_type=None, model_name="RandomForest"
+) -> go.Figure:
     """
     Generates a reliability curve for a classifier.
 
@@ -94,9 +96,7 @@ def reliability_curve(clf, X, y, n_bins=15, fig_type=None) -> go.Figure:
     # Add traces for each model
 
     fig.add_trace(
-        go.Scatter(
-            x=v_prob_pred, y=v_prob_true, mode="lines+markers", name="RandomForest"
-        )
+        go.Scatter(x=v_prob_pred, y=v_prob_true, mode="lines+markers", name=model_name)
     )
 
     # Add a trace for the perfectly calibrated line
