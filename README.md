@@ -49,4 +49,4 @@ Para a problemática, modifiquei para modelos binários, a fim de otimizar tempo
 
 ## Notion de Estudos
 
-Segue também o [link](https://cp-study.notion.site/Predi-o-Conformal-99bed789d7eb480f8032878a460321d0) para minhas referências de estudos.
+Segue também o [link](https://polyester-citrine-4e7.notion.site/Meu-Modelo-Conforme-134a0de3378e80728ad4f279c80fb065) para minhas referências de estudos.
