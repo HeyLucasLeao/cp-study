@@ -335,3 +335,25 @@ class WrapperOOBBinaryConformalClassifier:
         results["alpha"] = alpha
 
         return pd.DataFrame([results])
+
+    def measure_generalization(self, X_train, y_train, X_test, y_test):
+        """
+        Measure the generalization gap of the model.
+
+        The generalization gap is a measure that indicates how well the model generalizes
+        to unseen data that was not used during training. It is calculated as the absolute
+        difference between the error on the training set and the error on the test set.
+
+        Parameters:
+        X_train (array-like): Features of the training set
+        y_train (array-like): Labels of the training set
+        X_test (array-like): Features of the test set
+        y_test (array-like): Labels of the test set
+
+        Returns:
+        float: The generalization gap
+
+        """
+        train_loss = 1 - balanced_accuracy_score(self.predict(X_train), y_train)
+        test_loss = 1 - balanced_accuracy_score(self.predict(X_test), y_test)
+        return abs(train_loss - test_loss)
