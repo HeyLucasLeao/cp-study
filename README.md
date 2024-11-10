@@ -38,9 +38,19 @@ A diferença para esta metodologia é devido as regiões de previsão serem calc
 
 ## Score de Não Conformidade
 
-Para fins de aprendizado, criei dois templates de modelo, um utilizando score de probabilidade inversa, ou Hinge Loss, onde é calculado 1 - f(x) sendo f(x) a representação da previsão probabilistica da camada de Venn-Abers, podendo ir de zero a um o seu valor, sendo zero relaciona ao modelo estar correto, e um indicando que o modelo está completamente errado, enquanto margin refere-se à diferença entre a probabilidade da predição mais incorreta e a probabilidade correta. Valores menores ou iguais a zero indicam que o modelo tem certa confiança em relação à classe verdadeira, enquanto valores positivos representam uma incerteza em sua predição.
+Para fins de aprendizado, desenvolvi dois templates de modelo, utilizando por padrão o score de probabilidade inversa, ou Hinge Loss. Neste método, calculamos 1 - f(x), onde f(x) representa a previsão probabilística da camada de Venn-Abers. O valor resultante varia de zero a um:
 
-Para a problemática, modifiquei para modelos binários, a fim de otimizar tempo. Há um exemplo do código utilizado na biblioteca [crepes](https://github.com/henrikbostrom/crepes/blob/main/src/crepes/base.py) como referência.
+- Zero indica que o modelo está correto
+- Um indica que o modelo está completamente errado
+
+Além disso, implementei a score de margem, que se refere à diferença entre a probabilidade da predição mais incorreta e a probabilidade correta:
+
+- Valores ≤ 0: indicam que o modelo tem certa confiança em relação à classe verdadeira
+- Valores > 0: representam uma incerteza na predição
+
+Este template foi criado e armazenado apenas como referência de ideia e estudo pessoal. Para o desenvolvimento e leitura do conteúdo principal, não há necessidade de considerá-lo.
+
+A fim otimizar o tempo de processamento, também refatorei o cálculo de margem para modelos binários. Como referência, utilizei o código da biblioteca [crepes](https://github.com/henrikbostrom/crepes/blob/main/src/crepes/base.py), que oferece uma implementação mais robusta.
 
 ## Diagrama de Treinamento
 ![Dados de treinamento](https://github.com/HeyLucasLeao/cp-study/assets/26440910/79dc819d-c37f-49ec-98fc-82e26cf82911)
