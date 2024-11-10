@@ -57,6 +57,7 @@ class WrapperOOBBinaryConformalClassifier:
         self.hinge = None
         self.alpha = 0.05
         self.n = None
+        self.y = None
 
     def fit(self, y):
         """
@@ -87,7 +88,8 @@ class WrapperOOBBinaryConformalClassifier:
         # We only need the probability for the true class
         y_prob = y_prob[np.arange(self.n), y]
 
-        self.hinge = 1 - y_prob
+        self.hinge = self.generate_non_conformity_score(y_prob)
+        self.y = y
 
         return self
 
@@ -128,6 +130,67 @@ class WrapperOOBBinaryConformalClassifier:
 
         return np.where(np.all(y_pred == [0, 1], axis=1), 1, 0)
 
+    def generate_conformal_quantile(self, alpha=None):
+        """
+        Generates the conformal quantile for conformal prediction.
+
+        This function calculates the conformal quantile based on the non-conformity scores
+        of the true label probabilities. The quantile is used as a threshold
+        to determine the prediction set in conformal prediction.
+
+        Parameters:
+        -----------
+        alpha : float, optional
+            The significance level for conformal prediction. If None, uses the value
+            of self.alpha.
+
+        Returns:
+        --------
+        float
+            The calculated conformal quantile.
+
+        Notes:
+        ------
+        - The quantile is calculated as the (n+1)*(1-alpha)/n percentile of the non-conformity
+          scores, where n is the number of calibration samples.
+        - This method uses the self.hinge attribute, which should contain the non-conformity
+          scores of the calibration samples.
+
+        """
+
+        if alpha is None:
+            alpha = self.alpha
+
+        q_level = np.ceil((self.n + 1) * (1 - alpha)) / self.n
+        qhat = np.quantile(self.hinge, q_level, method="higher")
+        return qhat
+
+    def generate_non_conformity_score(self, y_prob):
+        """
+        Generates the non-conformity score based on the hinge loss.
+
+        This function calculates the non-conformity score for conformal prediction
+        using the hinge loss approach.
+
+        Parameters:
+        -----------
+        y_prob : array-like of shape (n_samples,) or (n_samples, n_classes)
+            The predicted probabilities for each class.
+
+        Returns:
+        --------
+        array-like
+            The non-conformity scores, where higher values indicate greater
+            non-conformity.
+
+        Notes:
+        ------
+        - This implementation assumes that y_prob contains probabilities and
+          not raw model outputs.
+
+        """
+        return 1 - y_prob
+
     def predict_set(self, X, alpha=None):
         """
         Predicts the possible set of classes for the instances in X based on the predefined significance level.
@@ -148,10 +211,8 @@ class WrapperOOBBinaryConformalClassifier:
             alpha = self.alpha
 
         y_prob = self.predict_proba(X)
-        nc_score = 1 - y_prob
-
-        q_level = np.ceil((self.n + 1) * (1 - alpha)) / self.n
-        qhat = np.quantile(self.hinge, q_level, method="higher")
+        nc_score = self.generate_non_conformity_score(y_prob)
+        qhat = self.generate_conformal_quantile(alpha)
 
         return (nc_score <= qhat).astype(int)
 
@@ -280,6 +341,42 @@ class WrapperOOBBinaryConformalClassifier:
 
         return self
 
+    def _evaluate_generalization(self, X, y, alpha=None):
+        """
+        Measure the generalization gap of the model.
+
+        The generalization gap indicates how well the model generalizes
+        to unseen data. It is calculated as the difference between the
+        error on the training set and the error on the test set.
+
+        Parameters:
+        X (array-like): Features of the test set
+        y (array-like): Labels of the test set
+        alpha (float, optional): Significance level for conformal prediction.
+                                 If None, uses the default value.
+
+        Returns:
+        float: The generalization gap
+
+        """
+
+        if alpha is None:
+            alpha = self.alpha
+
+        nc_score = self.generate_non_conformity_score(
+            self.learner.oob_decision_function_
+        )
+
+        qhat = self.generate_conformal_quantile(alpha)
+
+        y_pred = np.where(
+            np.all((nc_score <= qhat).astype(int) == [0, 1], axis=1), 1, 0
+        )
+
+        training_error = 1 - balanced_accuracy_score(y_pred, self.y)
+        test_error = 1 - balanced_accuracy_score(self.predict(X), y)
+        return training_error - test_error
+
     def evaluate(self, X, y, alpha=None):
         """
         Evaluates the performance of the conformal classifier on the given test data and labels.
@@ -328,32 +425,12 @@ class WrapperOOBBinaryConformalClassifier:
         results["empirical_coverage"] = round(
             self._empirical_coverage(X, alpha), n_digits
         )
-
+        results["generalization"] = round(
+            self._evaluate_generalization(X, y, alpha), n_digits
+        )
         results["auc"] = round(roc_auc_score(y, self.predict_proba(X)[:, 1]), n_digits)
         results["precision"] = round(precision_score(y, self.predict(X)), n_digits)
         results["recall"] = round(recall_score(y, self.predict(X)), n_digits)
         results["alpha"] = alpha
 
         return pd.DataFrame([results])
-
-    def measure_generalization(self, X_train, y_train, X_test, y_test):
-        """
-        Measure the generalization gap of the model.
-
-        The generalization gap is a measure that indicates how well the model generalizes
-        to unseen data that was not used during training. It is calculated as the absolute
-        difference between the error on the training set and the error on the test set.
-
-        Parameters:
-        X_train (array-like): Features of the training set
-        y_train (array-like): Labels of the training set
-        X_test (array-like): Features of the test set
-        y_test (array-like): Labels of the test set
-
-        Returns:
-        float: The generalization gap
-
-        """
-        train_loss = 1 - balanced_accuracy_score(self.predict(X_train), y_train)
-        test_loss = 1 - balanced_accuracy_score(self.predict(X_test), y_test)
-        return abs(train_loss - test_loss)
