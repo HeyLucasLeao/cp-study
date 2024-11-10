@@ -399,7 +399,7 @@ class WrapperOOBBinaryConformalClassifier:
         y_pred = np.where(np.all(prediction_set.astype(int) == [0, 1], axis=1), 1, 0)
 
         training_error = 1 - balanced_accuracy_score(y_pred, self.y)
-        test_error = 1 - balanced_accuracy_score(self.predict(X), y)
+        test_error = 1 - balanced_accuracy_score(self.predict(X, alpha), y)
         return training_error - test_error
 
     def evaluate(self, X, y, alpha=None):
@@ -454,8 +454,10 @@ class WrapperOOBBinaryConformalClassifier:
             self._evaluate_generalization(X, y, alpha), n_digits
         )
         results["auc"] = round(roc_auc_score(y, self.predict_proba(X)[:, 1]), n_digits)
-        results["precision"] = round(precision_score(y, self.predict(X)), n_digits)
-        results["recall"] = round(recall_score(y, self.predict(X)), n_digits)
+        results["precision"] = round(
+            precision_score(y, self.predict(X, alpha)), n_digits
+        )
+        results["recall"] = round(recall_score(y, self.predict(X, alpha)), n_digits)
         results["alpha"] = alpha
 
         return pd.DataFrame([results])
