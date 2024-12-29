@@ -216,6 +216,33 @@ class WrapperOOBBinaryConformalClassifier:
 
         return (nc_score <= qhat).astype(int)
 
+    def predict_p(self, X):
+        """
+        Calculate the p-values for each instance in the input data X using a non-conformity score.
+
+        Parameters:
+        -----------
+        X : array-like of shape (n_samples, n_features)
+            The input data for which the p-values need to be predicted.
+
+        Returns:
+        --------
+        p_values : array-like of shape (n_samples, n_classes)
+            The p-values for each instance in X for each class.
+
+        """
+        y_prob = self.predict_proba(X)
+        nc_score = self.generate_non_conformity_score(y_prob)
+        p_values = np.zeros_like(nc_score)
+
+        for i in range(nc_score.shape[0]):
+            for j in range(nc_score.shape[1]):
+                numerator = np.sum(self.hinge >= nc_score[i][j]) + 1
+                denumerator = self.n + 1
+                p_values[i, j] = numerator / denumerator
+
+        return p_values
+
     def _expected_calibration_error(self, y, y_prob, M=5):
         """
         Generate the expected calibration error (ECE) of the classifier.
