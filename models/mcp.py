@@ -17,13 +17,17 @@ import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="venn_abers")
 
 
-class WrapperOOBBinaryConformalClassifier:
+class OOBConformalClassifier:
     """
     A modrian class conditional conformal classifier based on Out-of-Bag (OOB) methodology, utilizing a random forest classifier as the underlying learner.
     This class is inspired by the WrapperClassifier classes from the Crepes library.
     """
 
-    def __init__(self, learner: RandomForestClassifier):
+    def __init__(
+        self,
+        learner: RandomForestClassifier,
+        alpha: float = 0.05,
+    ):
         """
         Constructs the classifier with a specified learner and a Venn-Abers calibration layer.
 
@@ -38,27 +42,25 @@ class WrapperOOBBinaryConformalClassifier:
             The calibration layer utilized in the classifier.
         feature_importances_: array-like of shape (n_features,)
             The feature importances derived from the learner.
-        alphas: array-like of shape (n_samples,), default=None
-            Nonconformity measure based at the difference between the predicted probability
-            of most likely incorrent class label and the predicted probability of the true label.
-            Close to zero or negative margin indicates confidence in the true class label, while a large positive margin signals
-            confidence in an incorrect class, suggesting unreliable predictions. The mergin measures the risk level of the model's prediction.
+        hinge : array-like of shape (n_samples,), default=None
+            Nonconformity scores based on the predicted probabilities. Measures the confidence margin
+            between the predicted probability of the true class and the most likely incorrect class.
         alpha: float, default=0.05
             The significance level applied in the classifier.
         """
 
+        self.learner = learner
+        self.alpha = alpha
+        self.calibration_layer = VennAbers()
+
         # Ensure the learner is fitted
-        check_is_fitted(learner)
+        check_is_fitted(learner, attributes=["oob_decision_function_"])
 
         if learner.n_classes_ > 2:
             raise ("Learner has more than 2 labels.")
 
-        # Initialize attributes
-        self.learner = learner
-        self.calibration_layer = VennAbers()
         self.feature_importances_ = self.learner.feature_importances_
         self.hinge = None
-        self.alpha = 0.05
         self.n = None
         self.classes = None
         self.y = None

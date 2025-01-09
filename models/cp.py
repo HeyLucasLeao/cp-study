@@ -17,13 +17,17 @@ import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning, module="venn_abers")
 
 
-class WrapperOOBBinaryConformalClassifier:
+class OOBConformalClassifier:
     """
-    A conformal classifier based on Out-of-Bag (OOB) methodology, utilizing a random forest classifier as the underlying learner.
-    This class is inspired by the WrapperClassifier classes from the Crepes library.
+    Conformal classifier based on Out-of-Bag (OOB) predictions.
+    Uses RandomForestClassifier and Venn-Abers calibration.
     """
 
-    def __init__(self, learner: RandomForestClassifier):
+    def __init__(
+        self,
+        learner: RandomForestClassifier,
+        alpha: float = 0.05,
+    ):
         """
         Constructs the classifier with a specified learner and a Venn-Abers calibration layer.
 
@@ -38,24 +42,22 @@ class WrapperOOBBinaryConformalClassifier:
             The calibration layer utilized in the classifier.
         feature_importances_: array-like of shape (n_features,)
             The feature importances derived from the learner.
-        margin: array-like of shape (n_samples,), default=None
-            Nonconformity measure based at the difference between the predicted probability
-            of most likely incorrent class label and the predicted probability of the true label.
-            Close to zero or negative margin indicates confidence in the true class label, while a large positive margin signals
-            confidence in an incorrect class, suggesting unreliable predictions. The mergin measures the risk level of the model's prediction.
+        hinge : array-like of shape (n_samples,), default=None
+            Nonconformity scores based on the predicted probabilities. Measures the confidence margin
+            between the predicted probability of the true class and the most likely incorrect class.
         alpha: float, default=0.05
             The significance level applied in the classifier.
         """
 
-        # Ensure the learner is fitted
-        check_is_fitted(learner)
-
-        # Initialize attributes
         self.learner = learner
+        self.alpha = alpha
         self.calibration_layer = VennAbers()
-        self.feature_importances_ = self.learner.feature_importances_
+
+        # Check if the learner is fitted
+        check_is_fitted(learner, attributes=["oob_decision_function_"])
+
+        self.feature_importances_ = learner.feature_importances_
         self.hinge = None
-        self.alpha = 0.05
         self.n = None
         self.y = None
 
@@ -123,8 +125,7 @@ class WrapperOOBBinaryConformalClassifier:
             A predicted true class if the model has certainty based on the predefined significance level.
         """
 
-        if alpha is None:
-            alpha = self.alpha
+        alpha = self.alpha if alpha is None else alpha
 
         y_pred = self.predict_set(X, alpha)
 
@@ -158,8 +159,7 @@ class WrapperOOBBinaryConformalClassifier:
 
         """
 
-        if alpha is None:
-            alpha = self.alpha
+        alpha = self.alpha if alpha is None else alpha
 
         q_level = np.ceil((self.n + 1) * (1 - alpha)) / self.n
         qhat = np.quantile(self.hinge, q_level, method="higher")
@@ -429,8 +429,7 @@ class WrapperOOBBinaryConformalClassifier:
             - "empirical_coverage": The empirical coverage.
         """
 
-        if alpha is None:
-            alpha = self.alpha
+        alpha = self.alpha if alpha is None else alpha
 
         results = {}
         y_prob = self.predict_proba(X)
