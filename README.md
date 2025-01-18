@@ -1,3 +1,10 @@
+# 🎉 Update 2025-01-18
+Thank you to everyone who has supported me and responded to my messages, even when I felt like I was being persistently annoying. To contribute to more reliable work in the industry, I've created a library called TinyCP. This library aims to enhance my studies and allows others to incorporate it into their own projects.
+
+In TinyCP, I've introduced some changes to the initial concept. Whether you appreciate the primary objective of my previous work, have suggestions for tests, or simply want to support me, please check out the new library. Thank you!
+
+[TinyCP](https://github.com/HeyLucasLeao/tinycp)
+
 # Estudo Exploratório de Previsão Conforme
 
 ## Sumário
